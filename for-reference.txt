@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ZORO — King of Hell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Space+Mono:wght@400;700&family=Shippori+Mincho:wght@700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#07050d;          /* purple-black night */
+    --oni:#b34dff;          /* demon purple */
+    --oni-deep:#5b1ea8;
+    --blood:#e0004d;        /* crimson slash */
+    --steel:#cfd6e4;        /* blade */
+    --paper:#efe9df;
+    --mono:'Space Mono',monospace;
+    --disp:'Pirata One',serif;
+    --kanji:'Shippori Mincho',serif;
+    --beb:'Bebas Neue',sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--ink);color:var(--paper);font-family:var(--mono);overflow-x:hidden;}
+  ::selection{background:var(--oni);color:var(--ink);}
+
+  .grain{position:fixed;inset:-50%;width:200%;height:200%;z-index:90;pointer-events:none;opacity:.06;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation:grain 8s steps(10) infinite;}
+  @keyframes grain{0%,100%{transform:translate(0,0)}20%{transform:translate(-5%,-6%)}40%{transform:translate(4%,-4%)}60%{transform:translate(-4%,6%)}80%{transform:translate(6%,3%)}}
+
+  .cursor{position:fixed;top:0;left:0;width:14px;height:14px;border:1.5px solid var(--oni);border-radius:50%;
+    z-index:99;pointer-events:none;transform:translate(-50%,-50%);mix-blend-mode:screen;transition:width .2s,height .2s;}
+  @media (hover:none){ .cursor{display:none;} }
+
+  /* ---------- HUD ---------- */
+  .hud{position:fixed;z-index:60;left:0;right:0;pointer-events:none;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(239,233,223,.5);}
+  .hud--top{top:0;display:flex;justify-content:space-between;padding:18px 24px;}
+  .hud--bottom{bottom:0;display:flex;justify-content:space-between;padding:18px 24px;}
+  .hud b{color:var(--oni);font-weight:400;}
+  .hud .bl{color:var(--blood);}
+
+  /* ---------- PRELOADER ---------- */
+  .pre{position:fixed;inset:0;z-index:100;background:var(--ink);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+  .pre__k{font-family:var(--kanji);font-weight:800;font-size:74px;color:var(--oni);opacity:0;text-shadow:0 0 34px rgba(179,77,255,.5);}
+  .pre__sub{font-size:11px;letter-spacing:.5em;color:rgba(239,233,223,.55);text-transform:uppercase;opacity:0;}
+  .pre__bar{width:170px;height:1px;background:rgba(255,255,255,.12);position:relative;overflow:hidden;}
+  .pre__bar i{position:absolute;left:0;top:0;bottom:0;width:0%;background:var(--blood);}
+  .pre__slash{position:absolute;inset:0;pointer-events:none;}
+  .pre__slash::before{content:'';position:absolute;top:-20%;bottom:-20%;left:50%;width:2px;background:linear-gradient(180deg,transparent,var(--steel),transparent);
+    transform:translateX(-50%) rotate(18deg) scaleY(0);opacity:0;}
+  .pre.slashing .pre__slash::before{animation:preSlash .32s ease-out forwards;}
+  @keyframes preSlash{0%{transform:translateX(-50%) rotate(18deg) scaleY(0);opacity:1;}60%{transform:translateX(-50%) rotate(18deg) scaleY(1);opacity:1;}100%{opacity:0;transform:translateX(-50%) rotate(18deg) scaleY(1);}}
+
+  /* ---------- HERO ---------- */
+  .hero{position:relative;height:100vh;overflow:hidden;background:var(--ink);}
+  .hero__video,.hero__fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .hero__fallback{display:none;}
+  .hero__shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,5,13,.5) 0%,rgba(7,5,13,.35) 30%,rgba(7,5,13,.45) 50%,rgba(7,5,13,.95) 100%);}
+  .hero__title{position:absolute;left:0;right:0;bottom:6vh;z-index:5;text-align:center;pointer-events:none;}
+  .hero__title .soft{display:block;font-family:var(--disp);font-size:clamp(24px,4.4vw,66px);color:transparent;-webkit-text-stroke:1.1px rgba(239,233,223,.8);letter-spacing:.06em;}
+  .hero__title .fill{display:block;font-family:var(--disp);font-size:clamp(60px,12vw,200px);line-height:.95;letter-spacing:.04em;
+    color:var(--paper);text-shadow:0 6px 34px rgba(0,0,0,.7),0 0 60px rgba(179,77,255,.22);}
+  .hero__title .fill em{font-style:normal;background:linear-gradient(178deg,#e0004d 5%,#b34dff 60%,#7b2ff2 95%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 3px 16px rgba(179,77,255,.5));
+    animation:emStorm 9s infinite;}
+  /* subtle charge flicker on the ZORO fill — brief, not strobing */
+  @keyframes emStorm{
+    0%,90%,100%{filter:drop-shadow(0 3px 16px rgba(179,77,255,.5));}
+    90.8%{filter:drop-shadow(0 0 22px rgba(190,170,255,.9)) brightness(1.45);}
+    91.6%{filter:drop-shadow(0 3px 16px rgba(179,77,255,.5));}
+    92.4%{filter:drop-shadow(0 0 30px rgba(190,170,255,1)) brightness(1.6);}
+    93.4%{filter:drop-shadow(0 3px 16px rgba(179,77,255,.5));}
+  }
+  .hero__eyebrow{position:absolute;left:24px;top:78px;z-index:5;}
+  .hero__eyebrow .l1{display:block;font-family:var(--beb);font-size:15px;letter-spacing:.5em;color:var(--oni);text-transform:uppercase;}
+  .hero__eyebrow .l2{display:block;margin-top:6px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:rgba(239,233,223,.5);}
+  .hero__eyebrow .l2 b{color:var(--blood);font-weight:400;}
+  .hero__kanji{position:absolute;top:50%;transform:translateY(-50%);z-index:4;font-family:var(--kanji);font-weight:800;
+    writing-mode:vertical-rl;font-size:clamp(24px,3vw,40px);letter-spacing:.14em;opacity:.85;}
+  .hero__kanji--l{left:24px;color:var(--oni);text-shadow:0 0 20px rgba(179,77,255,.45);}
+  .hero__kanji--r{right:24px;color:var(--blood);text-shadow:0 0 20px rgba(224,0,77,.45);}
+  .hero__scroll{position:absolute;right:28px;bottom:56px;z-index:6;text-align:right;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(239,233,223,.55);}
+  .hero__scroll i{display:block;width:1px;height:44px;margin:10px 5px 0 auto;background:linear-gradient(180deg,var(--oni),transparent);animation:drip 1.8s ease-in-out infinite;}
+  @keyframes drip{0%{transform:scaleY(0);transform-origin:top}45%{transform:scaleY(1);transform-origin:top}55%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+  /* ---------- HERO EYE OPENING (scroll-scrubbed) ---------- */
+  .eye{position:relative;height:260vh;background:#000;}
+  .eye__stick{position:sticky;top:0;height:100vh;overflow:hidden;background:#000;}
+  .eye__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.08);will-change:transform,filter,opacity;backface-visibility:hidden;}
+  .eye__img--blend{opacity:0;}
+  .eye__awake{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:rgba(4,2,10,.22);              /* the light black veil */
+  will-change:opacity;transition:opacity .1s linear;}
+.eye__awake-k{font-family:var(--kanji);font-weight:800;line-height:1;
+  font-size:clamp(70px,15vw,220px);letter-spacing:.08em;
+  color:rgba(239,233,223,.07);              /* transparent ghost text */
+  -webkit-text-stroke:1px rgba(179,77,255,.18);
+  text-shadow:0 0 60px rgba(179,77,255,.10);
+  transform:translateY(14px);transition:transform .6s ease;}
+.eye__awake-s{font-family:var(--kanji);font-size:clamp(11px,1.4vw,16px);
+  letter-spacing:.55em;color:rgba(239,233,223,.14);}
+.eye__awake.on .eye__awake-k{transform:translateY(0);}
+  /* LIGHTER overlay + long soft fade at the bottom (no hard band behind the title) */
+.eye__tint{position:absolute;inset:0;pointer-events:none;will-change:opacity;background:
+  radial-gradient(ellipse at center,transparent 46%,rgba(0,0,0,.30) 100%),
+  linear-gradient(180deg,
+    rgba(7,5,13,.42) 0%,
+    rgba(7,5,13,.08) 38%,
+    rgba(7,5,13,.04) 58%,
+    rgba(7,5,13,.10) 78%,
+    rgba(7,5,13,.20) 90%,
+    rgba(7,5,13,.30) 100%);}
+  .eye__lid{position:absolute;left:-5%;right:-5%;height:52%;z-index:3;background:
+    radial-gradient(ellipse at center,rgba(34,18,54,.5),rgba(0,0,0,.95) 58%,#000 100%);
+    pointer-events:none;will-change:transform;box-shadow:0 0 80px rgba(0,0,0,.9);}
+  .eye__lid--top{top:-1%;transform-origin:top;}
+  .eye__lid--bottom{bottom:-1%;transform-origin:bottom;}
+  /* feathered lid edges — kills the razor-sharp line while the eye opens */
+.eye__lid--top::after{content:'';position:absolute;left:0;right:0;top:100%;height:60px;
+  background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(7,5,13,.15) 50%,transparent);}
+.eye__lid--bottom::after{content:'';position:absolute;left:0;right:0;bottom:100%;height:60px;
+  background:linear-gradient(0deg,rgba(0,0,0,.5),rgba(7,5,13,.15) 50%,transparent);}
+  .eye__slit{position:absolute;left:50%;top:50%;z-index:4;width:min(74vw,920px);height:min(20vh,150px);
+    transform:translate(-50%,-50%) scaleX(.72);opacity:.28;pointer-events:none;border-radius:999px;
+    background:radial-gradient(ellipse at center,rgba(255,255,255,.18),rgba(179,77,255,.16) 34%,transparent 72%);
+    filter:blur(18px);mix-blend-mode:screen;will-change:transform,opacity;}
+  .eye__bolt{position:absolute;inset:0;z-index:5;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;}
+  .eye__flash{position:absolute;inset:0;z-index:7;background:linear-gradient(180deg,#e9e4ff 0%,#cfc4ff 40%,transparent 85%);
+    opacity:0;pointer-events:none;mix-blend-mode:screen;}
+  .eye__fallbackmsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;display:none;
+    font-size:12px;color:rgba(239,233,223,.55);letter-spacing:.08em;text-align:center;padding:0 20px;}
+  .eye .hero__eyebrow,.eye .hero__title,.eye .hero__kanji,.eye .hero__scroll{will-change:transform,opacity;}
+
+  /* ---------- SWORD DROP - THUNDER - ZORO CUT REVEAL ---------- */
+  .drop{position:relative;height:340vh;background:linear-gradient(180deg,#000 0%,#070412 58%,#050309 100%);}
+  .drop__stick{position:sticky;top:0;height:100vh;overflow:hidden;
+    perspective:1200px;perspective-origin:50% 40%;background:#000;}
+
+    .drop__bg{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.55;will-change:opacity,filter;}
+.drop__bg img{width:100%;height:100%;object-fit:cover;object-position:50% 22%;
+  filter:brightness(.75) saturate(1.05);}
+.drop__bg::after{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at center,transparent 30%,rgba(2,1,6,.85) 100%);}
+.drop__intro{position:absolute;left:50%;top:44%;z-index:6;transform:translate(-50%,-50%);
+  text-align:center;pointer-events:none;will-change:opacity,transform,filter;width:min(90vw,700px);}
+.drop__intro .ik{display:block;font-family:var(--kanji);font-weight:800;
+  font-size:clamp(40px,7vw,84px);color:rgba(224,0,77,.85);
+  text-shadow:0 0 30px rgba(224,0,77,.4);margin-bottom:10px;}
+.drop__intro h2{font-family:var(--disp);font-size:clamp(30px,5.5vw,72px);line-height:1.05;color:var(--paper);}
+.drop__intro h2 em{font-style:normal;color:transparent;-webkit-text-stroke:1.1px var(--oni);}
+.drop__intro p{margin-top:12px;font-size:10.5px;letter-spacing:.32em;color:rgba(239,233,223,.55);}
+.drop__intro .ihint{display:block;margin-top:26px;font-size:9.5px;letter-spacing:.4em;
+  color:rgba(179,77,255,.6);animation:drip 1.8s ease-in-out infinite;}
+  .drop__world{position:absolute;inset:0;will-change:transform;transform-style:preserve-3d;}
+  .drop__sky{position:absolute;inset:0;z-index:1;pointer-events:none;
+    background:
+      radial-gradient(120% 80% at 50% -10%,rgba(179,77,255,.24),transparent 58%),
+      radial-gradient(80% 52% at 50% 114%,rgba(224,0,77,.14),transparent 62%),
+      linear-gradient(180deg,#090616,#020104);}
+  .drop__grid{display:none;}
+  .drop__glyphs{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:0;will-change:opacity,transform;
+    font-family:var(--kanji);font-weight:800;color:rgba(239,233,223,.68);mix-blend-mode:screen;}
+  .drop__glyphs span{position:absolute;display:block;writing-mode:vertical-rl;text-orientation:mixed;
+    letter-spacing:.18em;text-shadow:0 0 18px rgba(179,77,255,.42),0 0 34px rgba(224,0,77,.24);
+    transform:translateY(28px);opacity:.72;will-change:transform,opacity,filter;}
+  .drop__glyphs .g1{left:9vw;top:13vh;font-size:clamp(28px,5vw,86px);color:rgba(179,77,255,.78);}
+  .drop__glyphs .g2{right:10vw;top:18vh;font-size:clamp(24px,4.3vw,72px);color:rgba(224,0,77,.72);}
+  .drop__glyphs .g3{left:20vw;bottom:15vh;font-size:clamp(18px,2.4vw,34px);color:rgba(239,233,223,.44);}
+  .drop__glyphs .g4{right:22vw;bottom:13vh;font-size:clamp(18px,2.4vw,34px);color:rgba(239,233,223,.42);}
+  .drop__seal{position:absolute;left:50%;top:50%;z-index:6;pointer-events:none;transform:translate(-50%,-50%) scale(.82);
+    font-family:var(--kanji);font-size:clamp(130px,24vw,330px);font-weight:900;line-height:1;color:transparent;
+    -webkit-text-stroke:1.5px rgba(224,0,77,.45);opacity:0;mix-blend-mode:screen;
+    text-shadow:0 0 30px rgba(224,0,77,.22),0 0 80px rgba(179,77,255,.18);will-change:opacity,transform,filter;}
+  .drop__seal::after{content:'斬';position:absolute;inset:0;color:rgba(224,0,77,.12);filter:blur(10px);}
+  .drop__blade{position:absolute;left:50%;top:0;z-index:8;width:min(22vw,210px);
+    will-change:transform,opacity,filter;transform:translate(-50%,0) translateY(0) rotateX(180deg) rotateZ(180deg) scale(.52);
+    filter:drop-shadow(0 30px 44px rgba(0,0,0,.75)) drop-shadow(0 0 30px rgba(179,77,255,.36));}
+  .drop__blade img{display:block;width:100%;height:auto;}
+  .drop__shock{position:absolute;left:50%;bottom:12vh;z-index:6;width:26px;height:26px;border-radius:50%;
+    transform:translate(-50%,50%) scale(0);opacity:0;pointer-events:none;
+    border:2px solid rgba(207,214,228,.9);box-shadow:0 0 40px 6px rgba(179,77,255,.55),0 0 90px 20px rgba(224,0,77,.25);}
+  .drop__glow{position:absolute;left:50%;bottom:12vh;z-index:5;width:72vw;height:44vh;pointer-events:none;
+    transform:translate(-50%,40%);opacity:0;
+    background:radial-gradient(ellipse at center,rgba(179,77,255,.58),rgba(224,0,77,.18) 42%,transparent 72%);
+    filter:blur(8px);}
+  .drop__wind{position:absolute;inset:0;z-index:7;pointer-events:none;width:100%;height:100%;mix-blend-mode:screen;}
+  .drop__bolt{position:absolute;inset:0;z-index:11;pointer-events:none;}
+  .drop__flash{position:absolute;inset:0;z-index:12;background:linear-gradient(180deg,#e9e4ff 0%,#c9bcff 45%,transparent 90%);
+    opacity:0;pointer-events:none;mix-blend-mode:screen;}
+  .drop__cut{position:absolute;left:50%;bottom:5vh;z-index:9;width:min(86vw,820px);max-height:90vh;
+    transform:translate(-50%,34px) scale(.94);opacity:0;pointer-events:none;will-change:transform,opacity,filter;
+    filter:drop-shadow(0 34px 70px rgba(0,0,0,.78)) drop-shadow(0 0 36px rgba(179,77,255,.34));}
+  .drop__cut img{display:block;width:100%;height:auto;max-height:90vh;object-fit:contain;}
+  @media (max-width:640px){
+    .drop__blade{width:min(38vw,180px);}
+    .drop__glyphs .g1{left:5vw;}
+    .drop__glyphs .g2{right:5vw;}
+    .drop__glyphs .g3,.drop__glyphs .g4{display:none;}
+    .drop__seal{font-size:clamp(120px,38vw,230px);}
+    .drop__cut{width:112vw;bottom:8vh;}
+  }
+
+  /* ---------- SLASH SPLIT (hover reveal) ---------- */
+  .slash{position:relative;height:100vh;overflow:hidden;cursor:none;background:#000;}
+  .slash__img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .slash__img--top{z-index:2;will-change:clip-path;}
+  .slash__dark{position:absolute;inset:0;z-index:3;background:rgba(4,2,10,.25);pointer-events:none;}
+  .slash__line{position:absolute;top:-30%;left:0;height:160%;width:3px;z-index:6;pointer-events:none;
+    will-change:transform,opacity;
+    background:linear-gradient(180deg,transparent,var(--steel) 12%,#fff 50%,var(--steel) 88%,transparent);
+    box-shadow:0 0 10px 2px rgba(207,214,228,.75),0 0 22px 5px rgba(179,77,255,.45);
+    transform:translateX(-50vw) rotate(18deg);transform-origin:center;}
+  .slash__spark{position:absolute;inset:0;z-index:7;pointer-events:none;width:100%;height:100%;}
+  .slash__bolt{position:absolute;inset:0;z-index:8;width:100%;height:100%;pointer-events:none;mix-blend-mode:screen;}
+  .slash__flash{position:absolute;inset:0;z-index:9;background:linear-gradient(180deg,#e9e4ff 0%,#cfc4ff 40%,transparent 85%);
+    opacity:0;pointer-events:none;mix-blend-mode:screen;}
+  .slash__card{position:absolute;bottom:56px;z-index:10;pointer-events:none;width:300px;padding:18px 20px;}
+  .slash__card .k{display:block;font-family:var(--beb);font-size:12px;letter-spacing:.4em;text-transform:uppercase;margin-bottom:6px;}
+  .slash__card h3{font-family:var(--disp);font-size:clamp(26px,3.6vw,48px);line-height:1;color:var(--paper);}
+  .slash__card p{font-size:11px;color:rgba(239,233,223,.6);margin-top:6px;line-height:1.7;}
+  /* electric border — vanilla remake of the reactbits "Electric Border" component */
+  .slash__card::before{content:'';position:absolute;inset:0;border-radius:8px;pointer-events:none;
+    border:1px solid rgba(179,77,255,.32);
+    box-shadow:0 0 14px rgba(179,77,255,.16),inset 0 0 20px rgba(179,77,255,.07);
+    background:linear-gradient(180deg,rgba(7,5,13,.35),rgba(7,5,13,.12));
+    animation:elecL 2.8s steps(2,end) infinite;}
+  .slash__card::after{content:'';position:absolute;inset:-3px;border-radius:10px;pointer-events:none;opacity:.5;
+    border:1px solid transparent;
+    animation:elecJit 2.8s steps(3,end) infinite;}
+  @keyframes elecL{
+    0%,100%{border-color:rgba(179,77,255,.32);box-shadow:0 0 14px rgba(179,77,255,.16),inset 0 0 20px rgba(179,77,255,.07);}
+    46%{border-color:rgba(179,77,255,.32);}
+    48%{border-color:rgba(255,255,255,.85);box-shadow:0 0 26px rgba(179,77,255,.55),inset 0 0 26px rgba(179,77,255,.18);}
+    50%{border-color:rgba(179,77,255,.32);}
+    76%{border-color:rgba(224,0,77,.5);box-shadow:0 0 20px rgba(224,0,77,.3),inset 0 0 20px rgba(224,0,77,.1);}
+    78%{border-color:rgba(179,77,255,.32);}
+  }
+  @keyframes elecJit{
+    0%,44%,52%,100%{border-color:transparent;transform:translate(0,0);}
+    47%{border-color:rgba(207,214,228,.5);transform:translate(1px,-1px);}
+    49%{border-color:rgba(179,77,255,.4);transform:translate(-1px,1px);}
+  }
+  .slash__card--l{left:44px;} .slash__card--l .k{color:var(--oni);}
+  .slash__card--r{right:44px;text-align:right;} .slash__card--r .k{color:var(--blood);}
+  .slash__card--r::before{animation-delay:1.3s;} .slash__card--r::after{animation-delay:1.3s;}
+  .slash__hint{position:absolute;left:50%;top:20px;transform:translateX(-50%);z-index:11;font-size:10px;letter-spacing:.32em;color:#fff;
+    background:rgba(0,0,0,.5);padding:7px 16px;border-radius:999px;border:1px solid rgba(255,255,255,.14);text-transform:uppercase;transition:opacity .5s;}
+
+  /* ---------- OUTRO ---------- */
+  .outro{position:relative;background:var(--ink);padding:100px 24px 120px;text-align:center;overflow:hidden;}
+  .outro::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,var(--oni),transparent);opacity:.5;}
+  .outro .k{font-family:var(--kanji);font-weight:800;font-size:46px;color:var(--blood);display:block;margin-bottom:18px;text-shadow:0 0 24px rgba(224,0,77,.4);}
+  .outro h3{font-family:var(--disp);font-size:clamp(30px,5.4vw,64px);line-height:1;color:var(--paper);}
+  .outro h3 em{font-style:normal;color:transparent;-webkit-text-stroke:1.1px var(--oni);}
+  .outro p{margin:16px auto 0;max-width:440px;font-size:11.5px;line-height:1.8;color:rgba(239,233,223,.55);}
+  .outro .sig{margin-top:40px;font-size:10px;letter-spacing:.4em;text-transform:uppercase;color:rgba(239,233,223,.4);}
+  .outro .sig b{color:var(--oni);font-weight:400;}
+
+  @media (max-width:760px){
+    .hud--top,.hud--bottom{padding:12px 14px;font-size:8.5px;}
+    .hero__kanji--l{left:10px;} .hero__kanji--r{right:10px;}
+    .hero__eyebrow{left:14px;top:64px;} .hero__eyebrow .l1{font-size:12px;letter-spacing:.35em;}
+    .slash__card{width:44%;padding:12px 12px;} .slash__card--l{left:16px;} .slash__card--r{right:16px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .grain,.hero__scroll i,.hero__title .fill em,.slash__card::before,.slash__card::after{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="cursor" id="cursor" aria-hidden="true"></div>
+
+<!-- PRELOADER -->
+<div class="pre" id="pre" aria-hidden="true">
+  <div class="pre__k" id="preK">三刀流</div>
+  <div class="pre__sub" id="preSub">SANTORYU · PIRATE HUNTER</div>
+  <div class="pre__bar"><i id="preFill"></i></div>
+  <div class="pre__slash"></div>
+</div>
+
+<!-- HUD -->
+<div class="hud hud--top">
+  <span>NODE // <b>WANO.SYS</b></span>
+  <span id="hudClock">--:--:--</span>
+</div>
+<div class="hud hud--bottom">
+  <span class="bl" id="hudState">BLADES: SHEATHED</span>
+  <span>BOUNTY // <b>1,111,000,000</b></span>
+</div>
+
+<!-- HERO EYE OPENING -->
+<section class="eye" id="eye">
+  <div class="eye__stick" id="eyeStick">
+    <img class="eye__img eye__img--base" id="eyeFrameA" src="./frames/frame_0001.jpg" alt="Zoro with closed eye">
+    <img class="eye__img eye__img--blend" id="eyeFrameB" src="./frames/frame_0002.jpg" alt="Zoro eye opening">
+    <div class="eye__tint" id="eyeTint"></div>
+    <div class="eye__lid eye__lid--top" id="eyeLidTop"></div>
+    <div class="eye__lid eye__lid--bottom" id="eyeLidBottom"></div>
+    <div class="eye__slit" id="eyeSlit"></div>
+    <div class="eye__awake" id="eyeAwake" aria-hidden="true">
+  <span class="eye__awake-k">地獄の王</span>
+  <span class="eye__awake-s">覇王色の覇気 · 三千世界</span>
+</div>
+    <canvas class="eye__bolt" id="eyeBolt"></canvas>
+    <div class="eye__flash" id="eyeFlash"></div>
+    <div class="eye__fallbackmsg" id="eyeFbMsg"></div>
+
+    <div class="hero__kanji hero__kanji--l" data-reveal>三千世界</div>
+    <div class="hero__kanji hero__kanji--r" data-reveal>地獄の王</div>
+
+    <div class="hero__eyebrow" data-reveal>
+      <span class="l1">Straw Hat's Right Wing</span>
+      <span class="l2">WANO COUNTRY - <b>RORONOA ZORO</b></span>
+    </div>
+
+    <div class="hero__title" id="heroTitle">
+      <span class="soft" data-reveal>Roronoa</span>
+      <span class="fill" data-reveal><em>ZORO</em></span>
+    </div>
+
+    <div class="hero__scroll" data-reveal>SCROLL<i></i></div>
+  </div>
+</section>
+
+<!-- SWORD DROP - THUNDER - ZORO REVEAL -->
+<section class="drop" id="drop">
+  <div class="drop__stick" id="dropStick">
+   <div class="drop__world" id="dropWorld">
+    <div class="drop__sky"></div>
+    <div class="drop__grid"></div>
+<div class="drop__bg" id="dropBg"><img src="./img/zoro_dark.png" alt=""></div>
+<div class="drop__intro" id="dropIntro">
+  <span class="ik">閻魔</span>
+  <h2>One blade. <em>One judgement.</em></h2>
+  <p>ENMA — THE SWORD THAT DRINKS ITS WIELDER'S HAKI</p>
+  <span class="ihint">KEEP SCROLLING · LET IT FALL</span>
+</div>
+    <div class="drop__glyphs" id="dropGlyphs" aria-hidden="true">
+      <span class="g1">閻魔</span>
+      <span class="g2">地獄の王</span>
+      <span class="g3">一刀流</span>
+      <span class="g4">雷鳴</span>
+    </div>
+    <div class="drop__seal" id="dropSeal" aria-hidden="true">斬</div>
+
+    <div class="drop__glow" id="dropGlow"></div>
+    <div class="drop__shock" id="dropShock"></div>
+
+    <div class="drop__cut" id="dropCut"><img src="./img/zoro_cut.png" onerror="this.onerror=null;this.src='./zoro_cut.png'" alt="Zoro cut"></div>
+
+    <canvas class="drop__wind" id="dropWind"></canvas>
+    <div class="drop__blade" id="dropBlade"><img src="./img/sword.png" alt="Katana"></div>
+
+    <canvas class="drop__bolt" id="dropBolt"></canvas>
+    <div class="drop__flash" id="dropFlash"></div>
+   </div>
+  </div>
+</section>
+
+<!-- SLASH SPLIT HOVER -->
+<section class="slash" id="slash">
+  <img class="slash__img" src="./img/zoro2.png">
+  <img class="slash__img slash__img--top" id="slashTop" src="./img/zoro1.png"><div class="slash__dark"></div>
+  <div class="slash__line" id="slashLine"></div>
+  <canvas class="slash__spark" id="slashSpark"></canvas>
+  <canvas class="slash__bolt" id="slashBolt"></canvas>
+  <div class="slash__flash" id="slashFlash"></div>
+
+  <div class="slash__card slash__card--l">
+    <span class="k">Pirate Hunter</span>
+    <h3>The Hunter</h3>
+    <p>Bandana tied. Nine mountains, eight seas — one cut through all of it.</p>
+  </div>
+  <div class="slash__card slash__card--r">
+    <span class="k">Advanced Conqueror's</span>
+    <h3>King of Hell</h3>
+    <p>Enma drinks. The purple flame answers. Cross the line if you dare.</p>
+  </div>
+
+  <div class="slash__hint" id="slashHint">&#10022; DRAG THE BLADE ACROSS &#10022;</div>
+</section>
+
+<!-- OUTRO -->
+<footer class="outro">
+  <span class="k">何も無かった</span>
+  <h3>Nothing <em>happened</em></h3>
+  <p>Scroll-driven eye reveal, single-sword thunder drop, and a slash-split hover - single file, no framework. Break it apart and reuse.</p>
+  <div class="sig">FORGED IN WANO · <b>@YOURHANDLE</b></div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script>
+(function(){
+  gsap.registerPlugin(ScrollTrigger);
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const DPR=Math.min(devicePixelRatio||1,2);
+
+  /* ---------- shared: user gesture gate (browsers block audio before interaction) ---------- */
+  let userInteracted=false;
+  ['pointerdown','touchstart','keydown','wheel'].forEach(ev=>
+    addEventListener(ev,()=>{userInteracted=true;},{once:true,passive:true}));
+
+  /* =====================================================================
+     REALISTIC LIGHTNING ENGINE
+     - channels are built with midpoint displacement (fractal jag, big
+       kinks up high, fine detail low) instead of uniform zig-zag
+     - each strike KEEPS its channel: restrikes re-illuminate the same
+       path (that's what real lightning does), only jittering ~1px
+     - drawn in 4 layers: wide violet corona → haze → pale sheath →
+       thin white-hot core, with dim tapering branches
+  ===================================================================== */
+  function boltPath(x1,y1,x2,y2,rough){
+    let pts=[{x:x1,y:y1},{x:x2,y:y2}], off=rough;
+    for(let it=0;it<6;it++){
+      const np=[pts[0]];
+      for(let i=1;i<pts.length;i++){
+        const a=pts[i-1],b=pts[i];
+        np.push({x:(a.x+b.x)/2+(Math.random()-0.5)*off,
+                 y:(a.y+b.y)/2+(Math.random()-0.5)*off*0.3});
+        np.push(b);
+      }
+      pts=np; off*=0.5;
+    }
+    return pts;
+  }
+  function buildStrike(x1,y1,x2,y2,rough){
+    const main=boltPath(x1,y1,x2,y2,rough);
+    const branches=[];
+    const total=Math.hypot(x2-x1,y2-y1);
+    const n=2+((Math.random()*3)|0);
+    for(let b=0;b<n;b++){
+      const i=(main.length*(0.18+Math.random()*0.5))|0;
+      const p=main[i], q=main[Math.min(main.length-1,i+6)];
+      const baseAng=Math.atan2(q.y-p.y,q.x-p.x);
+      const ang=baseAng+(Math.random()<0.5?-1:1)*(0.35+Math.random()*0.55);
+      const len=total*(0.14+Math.random()*0.2);
+      branches.push(boltPath(p.x,p.y,p.x+Math.cos(ang)*len,p.y+Math.sin(ang)*len,rough*0.5));
+    }
+    return {main,branches,top:{x:x1,y:y1}};
+  }
+  function strokePts(ctx,pts,w,style,blur,blurColor){
+    ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+    for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);
+    ctx.lineWidth=w; ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.strokeStyle=style;
+    if(blur){ctx.shadowBlur=blur;ctx.shadowColor=blurColor;}
+    ctx.stroke(); ctx.shadowBlur=0;
+  }
+  function drawStrike(ctx,st,coreW,a,skyR){
+    if(a<=0.01)return;
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    /* sky lights up around the channel origin, not the whole screen */
+    if(skyR){
+      const g=ctx.createRadialGradient(st.top.x,st.top.y,0,st.top.x,st.top.y,skyR);
+      g.addColorStop(0,'rgba(172,152,255,'+(a*0.18)+')');
+      g.addColorStop(0.5,'rgba(118,88,220,'+(a*0.06)+')');
+      g.addColorStop(1,'rgba(118,88,220,0)');
+      ctx.fillStyle=g;
+      ctx.fillRect(st.top.x-skyR,st.top.y-skyR*0.4,skyR*2,skyR*1.6);
+    }
+    ctx.translate((Math.random()-0.5)*1.8,(Math.random()-0.5)*1.2);
+    strokePts(ctx,st.main,coreW*9  ,'rgba(122,88,238,'+(a*0.05)+')');
+    strokePts(ctx,st.main,coreW*3.6,'rgba(156,138,255,'+(a*0.14)+')');
+    strokePts(ctx,st.main,coreW*1.5,'rgba(216,208,255,'+(a*0.5)+')');
+    strokePts(ctx,st.main,coreW*0.55,'rgba(255,255,255,'+a+')',14,'rgba(198,180,255,'+a+')');
+    for(const br of st.branches){
+      strokePts(ctx,br,coreW*1.5,'rgba(156,138,255,'+(a*0.09)+')');
+      strokePts(ctx,br,coreW*0.65,'rgba(224,218,255,'+(a*0.34)+')');
+      strokePts(ctx,br,coreW*0.28,'rgba(255,255,255,'+(a*0.62)+')');
+    }
+    ctx.restore();
+  }
+  /* restrike sequence: main flash, dark gap, 2-3 dimming return strokes */
+  function strikeSeq(draw,onFlash,onDone,big){
+    const seq=big?[1,0.22,0.9,0.08,0.6,0,0.38,0,0.18]:[0.85,0.12,0.5,0,0.26,0,0.12];
+    let acc=0;
+    seq.forEach((a,i)=>{
+      acc += i? 36+Math.random()*80 : 0;
+      setTimeout(()=>{ draw(a); onFlash(a); }, acc);
+    });
+    setTimeout(onDone, acc+130);
+  }
+
+  /* ---------- shared: layered thunder (crack + rolling body + sub rumble) ---------- */
+  let actx=null;
+  function thunderSound(vol,dur){
+    if(!userInteracted) return;
+    vol=vol||0.8; dur=dur||2.3;
+    try{
+      actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      if(actx.state==='suspended') actx.resume();
+      const sr=actx.sampleRate, now=actx.currentTime;
+      /* 1 — the crack: short bright snap right at the strike */
+      const cn=(sr*0.14)|0, cb=actx.createBuffer(1,cn,sr), cd=cb.getChannelData(0);
+      for(let i=0;i<cn;i++){const t=i/cn; cd[i]=(Math.random()*2-1)*Math.pow(1-t,3);}
+      const cs=actx.createBufferSource(); cs.buffer=cb;
+      const hp=actx.createBiquadFilter(); hp.type='highpass'; hp.frequency.value=1400;
+      const cg=actx.createGain(); cg.gain.value=vol*0.38;
+      cs.connect(hp); hp.connect(cg); cg.connect(actx.destination); cs.start(now);
+      /* 2 — rolling body: noise whose loudness wanders (the "roll"),
+             lowpass sweeping down as the sound travels */
+      const n=(sr*dur)|0, buf=actx.createBuffer(1,n,sr), d=buf.getChannelData(0);
+      let roll=1;
+      for(let i=0;i<n;i++){
+        const t=i/n;
+        if((i&1023)===0){ roll+=(Math.random()-0.5)*0.34; roll=Math.max(0.25,Math.min(1.25,roll)); }
+        d[i]=(Math.random()*2-1)*Math.pow(1-t,1.7)*roll;
+      }
+      const src=actx.createBufferSource(); src.buffer=buf;
+      const lp=actx.createBiquadFilter(); lp.type='lowpass';
+      lp.frequency.setValueAtTime(520,now);
+      lp.frequency.exponentialRampToValueAtTime(140,now+dur*0.8);
+      const g=actx.createGain();
+      g.gain.setValueAtTime(0.0001,now);
+      g.gain.exponentialRampToValueAtTime(vol,now+0.06);
+      g.gain.exponentialRampToValueAtTime(0.0001,now+dur);
+      src.connect(lp); lp.connect(g); g.connect(actx.destination); src.start(now+0.03);
+      /* 3 — sub rumble underneath, decaying slowest */
+      const sn=(sr*dur*1.1)|0, sb=actx.createBuffer(1,sn,sr), sd=sb.getChannelData(0);
+      for(let i=0;i<sn;i++){const t=i/sn; sd[i]=(Math.random()*2-1)*Math.pow(1-t,1.4);}
+      const ss=actx.createBufferSource(); ss.buffer=sb;
+      const slp=actx.createBiquadFilter(); slp.type='lowpass'; slp.frequency.value=70;
+      const sg=actx.createGain();
+      sg.gain.setValueAtTime(0.0001,now);
+      sg.gain.exponentialRampToValueAtTime(vol*0.9,now+0.09);
+      sg.gain.exponentialRampToValueAtTime(0.0001,now+dur*1.1);
+      ss.connect(slp); slp.connect(sg); sg.connect(actx.destination); ss.start(now+0.02);
+    }catch(e){}
+  }
+
+  /* ---------- eye video fallback ---------- */
+  const heroFallbackMessage='[ eye video placeholder - put your file at ./video/hero.mp4 ]';
+
+  /* ---------- cursor + clock ---------- */
+  const cursor=document.getElementById('cursor');
+  addEventListener('mousemove',e=>{cursor.style.left=e.clientX+'px';cursor.style.top=e.clientY+'px';});
+  setInterval(()=>{document.getElementById('hudClock').textContent=new Date().toTimeString().slice(0,8);},1000);
+
+  /* ---------- preloader ---------- */
+  const pre=document.getElementById('pre');
+  const load={v:0};
+  const tl=gsap.timeline();
+  tl.to('#preK',{opacity:1,scale:1,duration:.7,ease:'power2.out',startAt:{scale:.85}})
+    .to('#preSub',{opacity:1,duration:.5},'-=.3')
+    .to(load,{v:100,duration:reduced?0.3:1.4,ease:'power1.inOut',
+      onUpdate(){document.getElementById('preFill').style.width=load.v+'%';}},'<')
+    .add(()=>pre.classList.add('slashing'))
+    .to(pre,{clipPath:'polygon(0 0,100% 0,100% 0,0 0)',duration:.55,ease:'power3.inOut',delay:.25})
+    .set(pre,{display:'none'})
+    .from('[data-reveal]',{yPercent:70,opacity:0,duration:.9,ease:'power3.out',stagger:.1},'-=.3');
+
+  gsap.set(pre,{clipPath:'polygon(0 0,100% 0,100% 100%,0 100%)'});
+
+  /* ================= HERO EYE OPENING - smooth image sequence ================= */
+  const eyeStick=document.getElementById('eyeStick');
+  const eyeFrameA=document.getElementById('eyeFrameA');
+  const eyeFrameB=document.getElementById('eyeFrameB');
+  const eyeFallback=document.getElementById('eyeFbMsg');
+  const eyeLidTop=document.getElementById('eyeLidTop');
+  const eyeLidBottom=document.getElementById('eyeLidBottom');
+  const eyeSlit=document.getElementById('eyeSlit');
+ 
+  const eyeTint=document.getElementById('eyeTint');
+const eyeAwake=document.getElementById('eyeAwake');   // ← add this
+  const eyeFrameDir='./frames/';
+  const eyeFrames=Array.from({length:50},(_,i)=>eyeFrameDir+'frame_'+String(i+1).padStart(4,'0')+'.jpg');
+  let eyeTargetFrame=0, eyeFrame=0, lastBase=-1, lastBlend=-1, loadedEyeFrames=0;
+
+  eyeFrames.forEach(src=>{
+    const img=new Image();
+    img.onload=()=>{ loadedEyeFrames++; };
+    img.onerror=()=>{
+      if(eyeFallback){
+        eyeFallback.textContent='[ eye frame missing - check ./frames ]';
+        eyeFallback.style.display='block';
+      }
+    };
+    img.src=src;
+  });
+
+  /* --- eye lightning layer --- */
+  const eyeBolt=document.getElementById('eyeBolt');
+  const eyeFlash=document.getElementById('eyeFlash');
+  const ectx=eyeBolt.getContext('2d');
+  let eW=0,eH=0;
+  function sizeEyeBolt(){
+    eW=eyeStick.clientWidth; eH=eyeStick.clientHeight;
+    eyeBolt.width=eW*DPR; eyeBolt.height=eH*DPR; ectx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  sizeEyeBolt(); addEventListener('resize',sizeEyeBolt);
+
+  let eyeStorming=false;
+  function eyeThunder(power,withSound){
+    if(reduced || eyeStorming) return;
+    eyeStorming=true;
+    if(withSound) thunderSound(0.55*power, 1.6+power);
+    /* build channels ONCE — restrikes re-light the same path */
+    const sx=eW*(0.14+Math.random()*0.72);
+    const strikes=[buildStrike(sx,-20, sx+(Math.random()-0.5)*eW*0.18, eH*(0.52+Math.random()*0.3), eW*0.16)];
+    if(power>0.65 && Math.random()<0.75){
+      const sx2=eW*(0.1+Math.random()*0.8);
+      strikes.push(buildStrike(sx2,-20, sx2+(Math.random()-0.5)*eW*0.14, eH*(0.35+Math.random()*0.3), eW*0.12));
+    }
+    strikeSeq(
+      a=>{
+        ectx.clearRect(0,0,eW,eH);
+        strikes.forEach((st,i)=>drawStrike(ectx,st,(i?1.2:2)*Math.max(power,0.5),a*(i?0.5:1)*power,eW*0.3));
+      },
+      a=>{ eyeFlash.style.opacity=(a*power*0.26).toFixed(2); },
+      ()=>{ ectx.clearRect(0,0,eW,eH); eyeFlash.style.opacity=0; eyeStorming=false; },
+      power>0.7
+    );
+  }
+
+  /* thunder strikes as the eye opens: thresholds fire once per pass */
+  const eyeStrikes=[
+    {at:0.28,power:0.5,sound:false,fired:false},
+    {at:0.62,power:0.75,sound:true,fired:false},
+    {at:0.96,power:1,sound:true,fired:false}
+  ];
+  /* ambient distant flicker while the eye is open */
+  setInterval(()=>{
+    const open=eyeFrame/(eyeFrames.length-1);
+    if(open>0.55 && Math.random()<0.5 && !document.hidden) eyeThunder(0.35,false);
+  },3200);
+
+  function smoothStep(t){ return t*t*(3-2*t); }
+  function setEyeOpen(amount){
+    const open=smoothStep(Math.max(0,Math.min(1,amount)));
+    eyeLidTop.style.transform='translateY('+(-open*101).toFixed(2)+'%)';
+    eyeLidBottom.style.transform='translateY('+(open*101).toFixed(2)+'%)';
+    eyeSlit.style.opacity=(0.18+open*0.46).toFixed(3);
+    eyeSlit.style.transform='translate(-50%,-50%) scaleX('+(0.68+open*0.5).toFixed(3)+') scaleY('+(0.54+open*0.46).toFixed(3)+')';
+    /* the overlay breathes out as the eye opens — no heavy band left at the bottom */
+    eyeTint.style.opacity=(1-open*0.45).toFixed(3);
+    const scale=(1.08-open*0.055).toFixed(3);
+    const filter='contrast('+(1.02+open*0.06).toFixed(3)+') saturate('+(1.02+open*0.08).toFixed(3)+')';
+    eyeFrameA.style.transform='scale('+scale+')';
+    eyeFrameB.style.transform='scale('+scale+')';
+    eyeFrameA.style.filter=filter;
+    eyeFrameB.style.filter=filter;
+    /* threshold lightning */
+    for(const s of eyeStrikes){
+      if(!s.fired && open>=s.at){ s.fired=true; eyeThunder(s.power,s.sound); }
+      if(s.fired && open<s.at-0.12){ s.fired=false; }
+    }
+    /* veil + ghost kanji appear only in the last stretch of opening */
+const awake=Math.max(0,(open-0.85)/0.15);   // 0 → 1 between 85% and fully open
+eyeAwake.style.opacity=awake.toFixed(3);
+eyeAwake.classList.toggle('on',awake>0.5);
+  }
+  function renderEyeFrame(value){
+    const max=eyeFrames.length-1;
+    const clamped=Math.max(0,Math.min(max,value));
+    const base=Math.floor(clamped);
+    const blend=Math.min(max,base+1);
+    const mix=clamped-base;
+    if(base!==lastBase){ eyeFrameA.src=eyeFrames[base]; lastBase=base; }
+    if(blend!==lastBlend){ eyeFrameB.src=eyeFrames[blend]; lastBlend=blend; }
+    eyeFrameB.style.opacity=mix.toFixed(3);
+    setEyeOpen(clamped/max);
+  }
+  renderEyeFrame(0);
+
+  ScrollTrigger.create({
+    trigger:'#eye',start:'top top',end:'bottom bottom',scrub:0.85,
+    onLeaveBack(){ eyeTargetFrame=0; eyeFrame=0; renderEyeFrame(0); },
+    onUpdate(self){
+      const p=Math.max(0,Math.min(1,(self.progress-0.035)/0.82));
+      eyeTargetFrame=smoothStep(p)*(eyeFrames.length-1);
+    }
+  });
+
+  (function eyeSequenceFrame(){
+    eyeFrame += (eyeTargetFrame-eyeFrame) * (reduced ? 1 : 0.24);
+    if(Math.abs(eyeTargetFrame-eyeFrame)<0.015) eyeFrame=eyeTargetFrame;
+    renderEyeFrame(eyeFrame);
+    requestAnimationFrame(eyeSequenceFrame);
+  })();
+
+  /* ================= SWORD DROP - THUNDER - ZORO CUT REVEAL ================= */
+  (function(){
+    const stick=document.getElementById('dropStick');
+    const world=document.getElementById('dropWorld');
+    const blade=document.getElementById('dropBlade');
+    const dropBg=document.getElementById('dropBg');
+const dropIntro=document.getElementById('dropIntro');
+    const glyphs=document.getElementById('dropGlyphs');
+    const glyphItems=[].slice.call(document.querySelectorAll('#dropGlyphs span'));
+    const seal=document.getElementById('dropSeal');
+    const cut=document.getElementById('dropCut');
+    const glow=document.getElementById('dropGlow');
+    const shock=document.getElementById('dropShock');
+    const flash=document.getElementById('dropFlash');
+    const wind=document.getElementById('dropWind');
+    const wctx=wind.getContext('2d');
+    const bolt=document.getElementById('dropBolt');
+    const bctx=bolt.getContext('2d');
+
+    let W=0,H=0,groundY=0,cx=0,bladeH=0,cutPower=0,lastBladeY=0,lastFall=0;
+    let trailY=0,trailGlow=0;
+    const windPuffs=[], windStreaks=[];
+    function size(){
+      W=stick.clientWidth; H=stick.clientHeight;
+      bolt.width=W*DPR; bolt.height=H*DPR; bctx.setTransform(DPR,0,0,DPR,0,0);
+      wind.width=W*DPR; wind.height=H*DPR; wctx.setTransform(DPR,0,0,DPR,0,0);
+      bladeH=blade.offsetHeight || H*0.42;
+      cx=W/2; groundY=H*0.88;
+    }
+    size(); addEventListener('resize',size);
+    const bladeImg=blade.querySelector('img');
+    if(bladeImg) bladeImg.addEventListener('load',size);
+
+    const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+    const easeOut=t=>1-Math.pow(1-t,3);
+
+    function emitWind(y,fall,speed){
+      if(reduced || fall<=0 || fall>=0.98) return;
+      const power=Math.min(1,0.18+speed/34+fall*0.35);
+      const sourceY=y+bladeH*(0.22+0.45*fall);
+      const count=2+Math.floor(power*5);
+      for(let i=0;i<count;i++){
+        const side=i%2?-1:1;
+        windPuffs.push({
+          x:cx+side*(12+Math.random()*28)+(Math.random()-0.5)*18,
+          y:sourceY-Math.random()*bladeH*.35,
+          vx:side*(0.45+Math.random()*1.25)+(Math.random()-0.5)*0.4,
+          vy:-0.8-Math.random()*1.5-speed*0.025,
+          r:10+Math.random()*30+power*18,
+          life:0.72+Math.random()*0.28,
+          spin:(Math.random()-0.5)*0.06,
+          hue:Math.random()<0.7?'220,228,236':'179,77,255'
+        });
+      }
+      for(let i=0;i<3+Math.floor(power*5);i++){
+        const side=i%2?-1:1;
+        windStreaks.push({
+          x:cx+side*(20+Math.random()*42),
+          y:sourceY-Math.random()*bladeH*.6,
+          len:70+Math.random()*150+speed*3,
+          vx:side*(1.2+Math.random()*2.8),
+          vy:-2.2-Math.random()*3.4-speed*0.05,
+          a:0.25+Math.random()*0.35,
+          life:0.42+Math.random()*0.22,
+          side
+        });
+      }
+    }
+
+    function drawWind(){
+      wctx.clearRect(0,0,W,H);
+      wctx.globalCompositeOperation='lighter';
+      /* falling light trail behind the blade + hot tip — fades when scroll stops */
+      if(trailGlow>0.02 && !reduced){
+        const len=Math.min(H*0.55, 110+trailGlow*H*0.42);
+        const y0=trailY+bladeH*0.15;
+        const wid=9+trailGlow*16;
+        const g1=wctx.createLinearGradient(0,y0-len,0,y0+bladeH*0.4);
+        g1.addColorStop(0,'rgba(179,77,255,0)');
+        g1.addColorStop(0.7,'rgba(196,204,232,'+(0.10*trailGlow)+')');
+        g1.addColorStop(1,'rgba(238,242,255,'+(0.22*trailGlow)+')');
+        wctx.fillStyle=g1;
+        wctx.fillRect(cx-wid/2,y0-len,wid,len+bladeH*0.4);
+        const tipY=trailY+bladeH*0.98;
+        const rg=wctx.createRadialGradient(cx,tipY,0,cx,tipY,24+trailGlow*32);
+        rg.addColorStop(0,'rgba(238,242,255,'+(0.32*trailGlow)+')');
+        rg.addColorStop(1,'rgba(179,77,255,0)');
+        wctx.fillStyle=rg;
+        wctx.beginPath(); wctx.arc(cx,tipY,24+trailGlow*32,0,Math.PI*2); wctx.fill();
+        trailGlow*=0.88;
+      }
+      for(let i=windPuffs.length-1;i>=0;i--){
+        const p=windPuffs[i];
+        p.life-=0.018; p.x+=p.vx; p.y+=p.vy; p.vx*=0.992; p.vy-=0.012; p.r+=0.42;
+        if(p.life<=0){ windPuffs.splice(i,1); continue; }
+        const g=wctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+        g.addColorStop(0,'rgba('+p.hue+','+(0.18*p.life)+')');
+        g.addColorStop(0.45,'rgba('+p.hue+','+(0.08*p.life)+')');
+        g.addColorStop(1,'rgba('+p.hue+',0)');
+        wctx.fillStyle=g;
+        wctx.beginPath();
+        wctx.ellipse(p.x,p.y,p.r*1.15,p.r*0.58,p.spin+p.vx*0.04,0,Math.PI*2);
+        wctx.fill();
+      }
+      wctx.lineCap='round';
+      for(let i=windStreaks.length-1;i>=0;i--){
+        const s=windStreaks[i];
+        s.life-=0.035; s.x+=s.vx; s.y+=s.vy; s.len*=0.985;
+        if(s.life<=0){ windStreaks.splice(i,1); continue; }
+        const grad=wctx.createLinearGradient(s.x,s.y,s.x-s.side*s.len,s.y+s.len*.18);
+        grad.addColorStop(0,'rgba(238,244,255,'+(s.a*s.life)+')');
+        grad.addColorStop(1,'rgba(179,77,255,0)');
+        wctx.strokeStyle=grad;
+        wctx.lineWidth=1.1+2.4*s.life;
+        wctx.beginPath();
+        wctx.moveTo(s.x,s.y);
+        wctx.quadraticCurveTo(s.x-s.side*s.len*.42,s.y+s.len*.03,s.x-s.side*s.len,s.y+s.len*.18);
+        wctx.stroke();
+      }
+      wctx.globalCompositeOperation='source-over';
+      requestAnimationFrame(drawWind);
+    }
+    drawWind();
+
+    let impacted=false, dropStorming=false;
+    function thunder(){
+      thunderSound(0.95,2.6);
+      dropStorming=true;
+      /* one channel hits the blade, a weaker one lands off to the side */
+      const st=buildStrike(cx+(Math.random()-0.5)*60,-20,cx,groundY,W*0.14);
+      const st2=buildStrike(cx+(Math.random()<0.5?-1:1)*W*0.3,-20,cx+(Math.random()-0.5)*W*0.2,groundY*0.92,W*0.11);
+      strikeSeq(
+        a=>{
+          bctx.clearRect(0,0,W,H);
+          drawStrike(bctx,st,2.6,a,W*0.42);
+          drawStrike(bctx,st2,1.3,a*0.45,0);
+        },
+        a=>{ flash.style.opacity=(a*0.38).toFixed(2); },
+        ()=>{ bctx.clearRect(0,0,W,H); flash.style.opacity=0; dropStorming=false; },
+        true
+      );
+      if(window.gsap){
+        gsap.fromTo(shock,{scale:0,opacity:0.9},{scale:30,opacity:0,duration:.95,ease:'power2.out'});
+        gsap.fromTo(glow,{opacity:0},{opacity:1,duration:.16,yoyo:true,repeat:1,ease:'power1.out'});
+      }
+      if(!reduced) shake();
+    }
+    function shake(){
+      let f=0; const max=16;
+      (function sh(){
+        f++; const damp=Math.max(0,1-f/max), k=12*damp;
+        world.style.transform='translate('+((Math.random()-0.5)*k).toFixed(1)+'px,'+((Math.random()-0.5)*k).toFixed(1)+'px)';
+        if(f<max) requestAnimationFrame(sh); else world.style.transform='translate(0,0)';
+      })();
+    }
+    function resetThunder(){ bctx.clearRect(0,0,W,H); flash.style.opacity=0; shock.style.opacity=0; glow.style.opacity=0; }
+
+    cut.style.opacity=0;
+    cut.style.transform='translate(-50%,34px) scale(.94)';
+
+    function setDropText(fall, vanish, appear, speed){
+      const textPower=clamp((fall-0.08)/0.58,0,1);
+      const impactPower=clamp((fall-0.76)/0.22,0,1);
+      const fadeOut=clamp((appear-0.25)/0.65,0,1);
+      const opacity=textPower*(1-fadeOut*0.72);
+      glyphs.style.opacity=opacity.toFixed(3);
+      glyphs.style.transform='translateY('+((1-textPower)*30-speed*0.15).toFixed(1)+'px)';
+      for(let i=0;i<glyphItems.length;i++){
+        const local=clamp((textPower-i*0.09)/0.82,0,1);
+        glyphItems[i].style.opacity=(0.16+local*0.72).toFixed(3);
+        glyphItems[i].style.transform='translateY('+((1-local)*42-speed*(i%2?0.08:-0.05)).toFixed(1)+'px)';
+        glyphItems[i].style.filter='blur('+((1-local)*2.6).toFixed(2)+'px)';
+      }
+      const sealOpacity=clamp((impactPower*1.15)-fadeOut*0.8,0,1);
+      seal.style.opacity=sealOpacity.toFixed(3);
+      seal.style.transform='translate(-50%,-50%) scale('+(0.82+impactPower*0.24+speed*0.002).toFixed(3)+')';
+      seal.style.filter='blur('+((1-impactPower)*2.8).toFixed(2)+'px)';
+    }
+
+    ScrollTrigger.create({
+      trigger:'#drop', start:'top top', end:'bottom bottom', scrub:0.45,
+      onUpdate(self){
+        const p=self.progress;
+        /* intro text: fully there at the start, blurs and lifts away as the fall begins */
+const intro=1-clamp(p/0.16,0,1);
+dropIntro.style.opacity=intro.toFixed(3);
+dropIntro.style.transform='translate(-50%,-50%) translateY('+((1-intro)*-46).toFixed(1)+'px)';
+dropIntro.style.filter='blur('+((1-intro)*9).toFixed(1)+'px)';
+/* background portrait: soft at the start, blurs deeper and fades out by mid-fall */
+const bgFade=1-clamp((p-0.08)/0.34,0,1);
+dropBg.style.opacity=(0.55*bgFade).toFixed(3);
+dropBg.style.filter='blur('+(2+(1-bgFade)*10).toFixed(1)+'px)';
+        /* gravity fall: hangs at the top, accelerates, slams down */
+        const t=clamp(p/0.64,0,1);
+        const fall=Math.pow(t,1.7);
+        const landingY=Math.max(H*0.46, H-bladeH-H*0.08);
+        const y=landingY*fall;
+        const speed=Math.abs(y-lastBladeY);
+        /* slight air sway that settles as it gains speed */
+        const sway=Math.sin(t*Math.PI*2.4)*4.5*(1-fall);
+        const rotZ=180+sway;
+        const sc=0.52+0.48*fall;
+        /* speed smear: vertical stretch + motion blur, sharp again at rest */
+        const stretch=1+Math.min(0.075,speed*0.003);
+        const blur=Math.min(4.5,speed*0.11);
+        const vanish=easeOut(clamp((p-0.64)/0.16,0,1));
+        const appear=easeOut(clamp((p-0.70)/0.18,0,1));
+
+        blade.style.opacity=(1-vanish).toFixed(3);
+        blade.style.transform='translate(-50%,0) translateY('+y.toFixed(1)+'px) rotateX(180deg) rotateZ('+rotZ.toFixed(2)+'deg) scale('+sc.toFixed(3)+') scaleY('+stretch.toFixed(3)+')';
+        blade.style.filter='blur('+blur.toFixed(2)+'px) drop-shadow(0 30px 44px rgba(0,0,0,.75)) drop-shadow(0 0 '+(30+speed*0.5).toFixed(0)+'px rgba(179,77,255,'+(0.36+Math.min(0.3,speed*0.01)).toFixed(2)+'))';
+        trailY=y;
+        trailGlow=Math.max(trailGlow,Math.min(1,speed/24));
+
+        if(fall>0.02 && fall<0.99 && (fall>=lastFall || speed>2)) emitWind(y,fall,speed);
+        lastBladeY=y; lastFall=fall;
+        setDropText(fall, vanish, appear, speed);
+        cut.style.opacity=appear.toFixed(3);
+        cut.style.transform='translate(-50%,'+((1-appear)*34).toFixed(1)+'px) scale('+(0.94+0.06*appear).toFixed(3)+')';
+        cut.style.filter='drop-shadow(0 34px 70px rgba(0,0,0,.78)) drop-shadow(0 0 '+(28+appear*40).toFixed(1)+'px rgba(179,77,255,.48))';
+        glow.style.opacity=(appear*0.55).toFixed(3);
+        cutPower=appear;
+
+        if(p>=0.64 && !impacted){ impacted=true; thunder(); }
+        if(p<0.58 && impacted){ impacted=false; resetThunder(); }
+      }
+    });
+
+    /* ambient crackle around the revealed cut: real short-lived arcs
+       spawned every few hundred ms, each fading over ~240ms —
+       no per-frame random spaghetti */
+    const aura=[]; let lastAura=0;
+    (function thunderAura(){
+      requestAnimationFrame(thunderAura);
+      if(dropStorming) return; /* don't fight the impact strike frames */
+      bctx.clearRect(0,0,W,H);
+      if(cutPower>0.03 && !reduced){
+        const now=performance.now();
+        if(now-lastAura>260+Math.random()*440){
+          lastAura=now;
+          const side=Math.random()<0.5 ? W*(0.10+Math.random()*0.16) : W*(0.74+Math.random()*0.16);
+          aura.push({
+            st:buildStrike(side,H*(0.10+Math.random()*0.2), cx+(Math.random()-0.5)*W*0.24, H*(0.35+Math.random()*0.35), W*0.09),
+            born:now, w:0.8+Math.random()*0.7
+          });
+          if(aura.length>4) aura.shift();
+        }
+        for(let i=aura.length-1;i>=0;i--){
+          const s=aura[i], age=performance.now()-s.born;
+          const a=cutPower*Math.max(0,1-age/240)*(age<36?age/36:1);
+          if(a<=0){ aura.splice(i,1); continue; }
+          drawStrike(bctx,s.st,s.w,a*0.75,0);
+        }
+      }
+    })();
+  })();
+
+  /* ================= SLASH SPLIT HOVER ================= */
+  const slashSec=document.getElementById('slash');
+  const slashTop=document.getElementById('slashTop');
+  const slashLine=document.getElementById('slashLine');
+  const slashHint=document.getElementById('slashHint');
+  const sparkC=document.getElementById('slashSpark');
+  const sctx=sparkC.getContext('2d');
+  const slashBoltC=document.getElementById('slashBolt');
+  const slctx=slashBoltC.getContext('2d');
+  const slashFlash=document.getElementById('slashFlash');
+  const TILT=18*Math.PI/180;      // slash angle from vertical
+  const TAN=Math.tan(TILT);
+
+ let sx=0, sTarget=0, lastX=0, lastApplied=-1;
+  let sparks=[];
+  let sw=0, sh=0, halfShift=0;
+
+  function resizeSpark(){
+    sw=slashSec.clientWidth; sh=slashSec.clientHeight;
+    halfShift=(sh/2)*TAN;
+    sparkC.width=sw*DPR; sparkC.height=sh*DPR;
+    sctx.setTransform(DPR,0,0,DPR,0,0);
+    slashBoltC.width=sw*DPR; slashBoltC.height=sh*DPR;
+    slctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resizeSpark(); addEventListener('resize',resizeSpark);
+
+  /* ---- full-screen thunder on hover ---- */
+  let slashStorming=false, lastRumble=0;
+  function slashThunder(intensity,focusX){
+    if(reduced || slashStorming) return;
+    slashStorming=true;
+    const now=performance.now();
+    if(now-lastRumble>1200){ thunderSound(0.7*intensity,1.8+intensity); lastRumble=now; }
+    /* channels built once, restruck along the same path */
+    const strikes=[];
+    const mainX=(focusX!=null)? focusX+(Math.random()-0.5)*sw*0.1 : sw*(0.2+Math.random()*0.6);
+    strikes.push({st:buildStrike(mainX,-20, mainX+(Math.random()-0.5)*sw*0.16, sh*(0.6+Math.random()*0.34), sw*0.13), w:2.4*Math.max(intensity,0.6), k:1});
+    if(intensity>0.65){
+      const x2=sw*(0.08+Math.random()*0.84);
+      strikes.push({st:buildStrike(x2,-20, x2+(Math.random()-0.5)*sw*0.12, sh*(0.4+Math.random()*0.3), sw*0.1), w:1.3, k:0.5});
+      /* cloud-to-cloud arc crawling near the top */
+      strikes.push({st:buildStrike(sw*0.08, sh*(0.08+Math.random()*0.1), sw*0.92, sh*(0.1+Math.random()*0.14), sh*0.1), w:0.9, k:0.3});
+    }
+    strikeSeq(
+      a=>{
+        slctx.clearRect(0,0,sw,sh);
+        strikes.forEach((s,i)=>drawStrike(slctx,s.st,s.w,a*s.k*intensity, i===0?sw*0.3:0));
+      },
+      a=>{ slashFlash.style.opacity=(a*intensity*0.3).toFixed(2); },
+      ()=>{ slctx.clearRect(0,0,sw,sh); slashFlash.style.opacity=0; slashStorming=false; },
+      intensity>0.7
+    );
+  }
+
+  slashSec.addEventListener('mouseenter',()=>slashThunder(1));
+  slashSec.addEventListener('touchstart',()=>slashThunder(1),{passive:true});
+
+  let lastMoveBolt=0;
+  function setPointer(clientX,clientY){
+    const r=slashSec.getBoundingClientRect();
+    const edge=sw ? halfShift/sw : 0;
+    const raw=(clientX-r.left)/sw;
+    sTarget=Math.min(1+edge,Math.max(-edge,raw*(1+edge*2)-edge));
+    slashHint.style.opacity=0;
+    const py=(clientY-r.top);
+    const speed=Math.abs(sTarget-lastX);
+    const n=Math.min(10,Math.floor(speed*160));
+    for(let i=0;i<n;i++){
+      sparks.push({
+        x:sTarget*sw+(Math.random()-0.5)*10,
+        y:py+(Math.random()-0.5)*80,
+        vx:(Math.random()-0.5)*4,vy:(Math.random()-0.7)*3,
+        r:0.8+Math.random()*2,life:1,
+        col:Math.random()<0.5?'207,214,228':'179,77,255'
+      });
+    }
+    /* fast blade drags call the storm down near the cursor */
+    const now=performance.now();
+    if(speed>0.05 && now-lastMoveBolt>800){
+      lastMoveBolt=now;
+      slashThunder(0.55+Math.min(0.45,speed*3), clientX-r.left);
+    }
+    lastX=sTarget;
+  }
+  slashSec.addEventListener('mousemove',e=>setPointer(e.clientX,e.clientY));
+  slashSec.addEventListener('touchmove',e=>{const t=e.touches[0];setPointer(t.clientX,t.clientY);},{passive:true});
+  slashSec.addEventListener('mouseleave',()=>{sTarget=sx;});
+
+  (function slashFrame(){
+    // fast direct lerp — responsive, no spring wobble
+    sx += (sTarget - sx) * 0.28;
+
+    // only touch the DOM when the change is visible
+    if(Math.abs(sx-lastApplied) > 0.0004){
+      const cx=sx*sw;
+      const xTop=cx - halfShift;
+      const xBot=cx + halfShift;
+      slashTop.style.clipPath='polygon(0 0,'+xTop.toFixed(1)+'px 0,'+xBot.toFixed(1)+'px '+sh+'px,0 '+sh+'px)';
+      slashLine.style.transform='translateX('+cx.toFixed(1)+'px) rotate(18deg)';
+      const glow=Math.min(1,Math.abs(sTarget-sx)*6+0.4);
+      slashLine.style.opacity=glow.toFixed(2);
+      lastApplied=sx;
+    }
+
+    // sparks
+    if(sparks.length){
+      sctx.clearRect(0,0,sw,sh);
+      sctx.globalCompositeOperation='lighter';
+      for(let i=sparks.length-1;i>=0;i--){
+        const p=sparks[i];
+        p.x+=p.vx;p.y+=p.vy;p.vy+=0.12;p.life-=0.03;
+        if(p.life<=0){sparks.splice(i,1);continue;}
+        sctx.beginPath();sctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+        sctx.fillStyle='rgba('+p.col+','+p.life+')';sctx.fill();
+      }
+      sctx.globalCompositeOperation='source-over';
+      if(!sparks.length) sctx.clearRect(0,0,sw,sh);
+    }
+    requestAnimationFrame(slashFrame);
+  })();
+
+  /* hud state by section */
+  const hudState=document.getElementById('hudState');
+  ScrollTrigger.create({trigger:'#eye',start:'top center',onEnter(){hudState.textContent='BLADES: SENSING';},onLeaveBack(){hudState.textContent='BLADES: SHEATHED';}});
+  ScrollTrigger.create({trigger:'#drop',start:'top center',onEnter(){hudState.textContent='BLADES: ONE FALLS';}});
+  ScrollTrigger.create({trigger:'#slash',start:'top center',onEnter(){hudState.textContent='BLADES: ONI GIRI';}});
+})();
+</script>
+</body>
+</html>
